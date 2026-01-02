@@ -1,0 +1,33 @@
+<div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" 
+     tabindex="-1" role="dialog" aria-labelledby="inputModalLabel" aria-hidden="!showModal">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-primary">
+      <div class="modal-header border-primary">
+        <h5 class="modal-title" id="inputModalLabel">
+          <i class="bi bi-pencil-square text-primary"></i> {{ title }}
+        </h5>
+        <button type="button" class="btn-close" (click)="onCancel()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">{{ message }}</p>
+        <input 
+          type="text" 
+          class="form-control" 
+          #inputField
+          [(ngModel)]="inputValue"
+          [placeholder]="placeholder"
+          (keydown)="onKeyPress($event)"
+          [class.is-invalid]="required && !inputValue.trim()">
+        <div class="invalid-feedback" *ngIf="required && !inputValue.trim()">
+          This field is required.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="onConfirm()" [disabled]="required && !inputValue.trim()">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showModal" *ngIf="showModal"></div>
+

@@ -1,0 +1,26 @@
+<app-navbar></app-navbar>
+<div class="container-fluid">
+  <h2>My Profile</h2>
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" formControlName="username" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" formControlName="email" readonly>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Role</label>
+          <input type="text" class="form-control" [value]="currentUser?.roles?.join(', ')" readonly>
+        </div>
+        <div *ngIf="message" class="alert alert-info">{{ message }}</div>
+        <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid">Update Profile</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+

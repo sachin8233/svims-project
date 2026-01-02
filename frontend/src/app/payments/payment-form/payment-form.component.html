@@ -1,0 +1,64 @@
+<app-navbar></app-navbar>
+<div class="container-fluid">
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="mb-0">Record Payment</h2>
+  </div>
+  
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label class="form-label">Invoice *</label>
+          <select class="form-select" formControlName="invoiceId">
+            <option value="">Select Invoice</option>
+            <option *ngFor="let invoice of invoices" [value]="invoice.id">
+              {{ invoice.invoiceNumber }} - {{ invoice.vendorName }} - {{ invoice.totalAmount | currency:'INR' }}
+            </option>
+          </select>
+          <div *ngIf="paymentForm.get('invoiceId')?.invalid && paymentForm.get('invoiceId')?.touched" 
+               class="text-danger">Invoice is required</div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Amount *</label>
+          <input type="number" step="0.01" class="form-control" formControlName="amount">
+          <div *ngIf="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched" 
+               class="text-danger">Amount is required</div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Payment Date</label>
+          <input type="datetime-local" class="form-control" formControlName="paymentDate">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Payment Method</label>
+          <select class="form-select" formControlName="paymentMethod">
+            <option value="BANK_TRANSFER">Bank Transfer</option>
+            <option value="CHEQUE">Cheque</option>
+            <option value="CASH">Cash</option>
+            <option value="ONLINE">Online</option>
+          </select>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Transaction Reference</label>
+          <input type="text" class="form-control" formControlName="transactionReference">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Notes</label>
+          <textarea class="form-control" formControlName="notes" rows="3"></textarea>
+        </div>
+        
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary" [disabled]="paymentForm.invalid">
+            Record Payment
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

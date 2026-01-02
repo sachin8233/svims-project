@@ -1,0 +1,21 @@
+<div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" 
+     tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="!showModal">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content" [ngClass]="getModalClass()">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalLabel">
+          <i [ngClass]="getIconClass()"></i> {{ title }}
+        </h5>
+        <button type="button" class="btn-close" (click)="close()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">{{ message }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="close()">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showModal" *ngIf="showModal"></div>
+

@@ -1,0 +1,83 @@
+<app-navbar></app-navbar>
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Audit Logs</h2>
+    <button class="btn btn-primary btn-sm" (click)="loadAuditLogs()" [disabled]="loading">
+      <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i> Refresh
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+    <br><small>Check browser console (F12) for more details.</small>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading audit logs...</p>
+  </div>
+
+  <div *ngIf="!loading && auditLogs.length === 0 && !error" class="card">
+    <div class="card-body text-center py-5">
+      <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+      <h5 class="text-muted mb-3">No audit logs found</h5>
+      <p class="text-muted mb-4">
+        Audit logs are automatically created when users perform actions in the system.
+      </p>
+      <div class="alert alert-info text-start" style="max-width: 600px; margin: 0 auto;">
+        <strong>To generate audit logs, try:</strong>
+        <ul class="mb-0 mt-2">
+          <li>Create a new invoice</li>
+          <li>Update an existing invoice</li>
+          <li>Approve or reject an invoice</li>
+          <li>Create a payment</li>
+          <li>Delete a payment</li>
+        </ul>
+        <p class="mb-0 mt-2"><small>After performing these actions, click the <strong>Refresh</strong> button above to see the logs.</small></p>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && auditLogs.length > 0" class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Entity Type</th>
+              <th>Entity ID</th>
+              <th>Description</th>
+              <th>IP Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of auditLogs">
+              <td>{{ log.timestamp | date:'short' }}</td>
+              <td><strong>{{ log.userName }}</strong></td>
+              <td>
+                <span [ngClass]="getActionBadgeClass(log.action)">
+                  {{ log.action }}
+                </span>
+              </td>
+              <td>{{ log.entityType }}</td>
+              <td>{{ log.entityId || '-' }}</td>
+              <td>
+                <span [title]="log.description">{{ log.description || '-' }}</span>
+              </td>
+              <td>{{ log.ipAddress || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer text-muted">
+      Total: {{ auditLogs.length }} audit log(s)
+    </div>
+  </div>
+</div>
+

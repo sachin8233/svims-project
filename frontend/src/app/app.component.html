@@ -1,0 +1,22 @@
+<router-outlet></router-outlet>
+
+<!-- Floating Chatbot Icon - Only show when authenticated and panel is closed -->
+<button *ngIf="showChatbotButton && !isChatbotOpen" 
+        class="chatbot-float-btn" 
+        (click)="toggleChatbot()" 
+        title="AI Assistant">
+  <i class="fas fa-comments"></i>
+  <span class="btn-text">AI Assistant</span>
+</button>
+
+<!-- Chatbot Right Panel -->
+<div *ngIf="showChatbotButton" class="chatbot-panel" [class.open]="isChatbotOpen">
+  <app-chatbot (closePanelEvent)="closeChatbot()"></app-chatbot>
+</div>
+
+<!-- Backdrop overlay -->
+<div *ngIf="showChatbotButton" 
+     class="chatbot-backdrop" 
+     [class.show]="isChatbotOpen" 
+     (click)="closeChatbot()"></div>
+

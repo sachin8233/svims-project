@@ -1,0 +1,58 @@
+<app-navbar></app-navbar>
+<div class="container-fluid">
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="mb-0">{{ isEditMode ? 'Edit' : 'Create' }} Vendor</h2>
+  </div>
+  
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="vendorForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label class="form-label">Name *</label>
+          <input type="text" class="form-control" formControlName="name">
+          <div *ngIf="vendorForm.get('name')?.invalid && vendorForm.get('name')?.touched" 
+               class="text-danger">Name is required</div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">GSTIN</label>
+          <input type="text" class="form-control" formControlName="gstin" 
+                 placeholder="Enter numbers only" 
+                 (keypress)="onGstinKeyPress($event)">
+          <div *ngIf="vendorForm.get('gstin')?.invalid && vendorForm.get('gstin')?.touched" 
+               class="text-danger">GSTIN must contain only numbers</div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Email *</label>
+          <input type="email" class="form-control" formControlName="email">
+          <div *ngIf="vendorForm.get('email')?.invalid && vendorForm.get('email')?.touched" 
+               class="text-danger">Valid email is required</div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" formControlName="status">
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="SUSPENDED">Suspended</option>
+          </select>
+        </div>
+        
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary" [disabled]="vendorForm.invalid || isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            {{ isEditMode ? 'Update' : 'Create' }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancel()" [disabled]="isLoading">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

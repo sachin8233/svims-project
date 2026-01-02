@@ -1,0 +1,162 @@
+<app-navbar></app-navbar>
+<app-modal 
+  [title]="modalTitle" 
+  [message]="modalMessage" 
+  [type]="modalType" 
+  [showModal]="showModal"
+  (closeModal)="closeModal()">
+</app-modal>
+<app-input-modal 
+  [title]="inputModalTitle" 
+  [message]="inputModalMessage" 
+  [placeholder]="inputModalPlaceholder"
+  [showModal]="showInputModal"
+  [required]="false"
+  (confirm)="onInputConfirm($event)"
+  (cancel)="onInputCancel()">
+</app-input-modal>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Invoices</h2>
+    <div class="d-flex align-items-center gap-3">
+      <!-- Search Box -->
+      <div class="input-group" style="width: 300px;">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input type="text" 
+               class="form-control" 
+               placeholder="Search invoices..."
+               [(ngModel)]="searchTerm"
+               (input)="onSearchChange()">
+      </div>
+      <button class="btn btn-primary" *ngIf="canCreateInvoice()" routerLink="/invoices/new">Create New Invoice</button>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Invoice #</th>
+            <th>Vendor</th>
+            <th>Amount</th>
+            <th>GST</th>
+            <th>Total</th>
+            <th>Invoice Date</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Approval Progress</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let invoice of getPaginatedInvoices()">
+            <td>{{ invoice.invoiceNumber }}</td>
+            <td>{{ invoice.vendorName }}</td>
+            <td>{{ invoice.amount | currency:'INR' }}</td>
+            <td>{{ getTotalGst(invoice) | currency:'INR' }}</td>
+            <td><strong>{{ invoice.totalAmount | currency:'INR' }}</strong></td>
+            <td>{{ invoice.invoiceDate | date:'shortDate' }}</td>
+            <td>{{ invoice.dueDate | date:'shortDate' }}</td>
+            <td>
+              <span [class]="'badge bg-' + getStatusColor(invoice.status)">
+                {{ invoice.status }}
+              </span>
+            </td>
+            <td>
+              <div *ngIf="invoice.status === 'PENDING' && getApprovalInfo(invoice.id!)">
+                <div class="progress mb-1" style="height: 18px;">
+                  <div class="progress-bar" 
+                       [ngClass]="{
+                         'bg-success': getApprovalInfo(invoice.id!)?.isFullyApproved,
+                         'bg-warning': !getApprovalInfo(invoice.id!)?.isFullyApproved
+                       }"
+                       [style.width.%]="getApprovalInfo(invoice.id!)?.requiredApprovalLevels ? 
+                         (getApprovalInfo(invoice.id!)!.currentApprovalLevel / getApprovalInfo(invoice.id!)!.requiredApprovalLevels * 100) : 0">
+                    {{ getApprovalInfo(invoice.id!)?.currentApprovalLevel }} / {{ getApprovalInfo(invoice.id!)?.requiredApprovalLevels }}
+                  </div>
+                </div>
+                <small class="text-muted">
+                  Level {{ getApprovalInfo(invoice.id!)?.currentApprovalLevel }} of {{ getApprovalInfo(invoice.id!)?.requiredApprovalLevels }}
+                </small>
+              </div>
+              <span *ngIf="invoice.status === 'PENDING' && !getApprovalInfo(invoice.id!)" class="text-muted">
+                <small>Loading...</small>
+              </span>
+              <span *ngIf="invoice.status !== 'PENDING'" class="text-muted">
+                <small>-</small>
+              </span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-info" 
+                        (click)="viewInvoice(invoice.id!)"
+                        title="View Invoice Details">
+                  <i class="bi bi-eye"></i> View
+                </button>
+                <button class="btn btn-success" 
+                        *ngIf="invoice.status === 'PENDING'"
+                        (click)="approveInvoice(invoice)">
+                  Approve<span *ngIf="(invoice.currentApprovalLevel || 0) + 1 > 1"> L{{ (invoice.currentApprovalLevel || 0) + 1 }}</span>
+                </button>
+                <button class="btn btn-danger" 
+                        *ngIf="invoice.status === 'PENDING'"
+                        (click)="rejectInvoice(invoice.id!)">Reject</button>
+                <button class="btn btn-primary" 
+                        *ngIf="canEditInvoice(invoice.status)"
+                        (click)="editInvoice(invoice.id!)">Edit</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <!-- No Results Message -->
+      <div *ngIf="filteredInvoices.length === 0" class="text-center py-4">
+        <p class="text-muted">No invoices found matching your search criteria.</p>
+      </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1 || filteredInvoices.length > 0" class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+        <div class="text-muted small">
+          Showing <strong>{{ (currentPage - 1) * itemsPerPage + 1 }}</strong> - 
+          <strong>{{ Math.min(currentPage * itemsPerPage, filteredInvoices.length) }}</strong> of 
+          <strong>{{ filteredInvoices.length }}</strong> invoices
+        </div>
+        <nav *ngIf="totalPages > 1">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <a class="page-link" (click)="previousPage()" style="cursor: pointer;" [class.pointer-events-none]="currentPage === 1">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+            <li *ngFor="let page of getPageNumbers()" 
+                class="page-item" 
+                [class.active]="page === currentPage">
+              <a class="page-link" (click)="goToPage(page)" style="cursor: pointer;">{{ page }}</a>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a class="page-link" (click)="nextPage()" style="cursor: pointer;" [class.pointer-events-none]="currentPage === totalPages">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+          <label class="mb-0 small text-muted">Per page:</label>
+          <select class="form-select form-select-sm" style="width: 70px;" 
+                  [(ngModel)]="itemsPerPage" 
+                  (change)="applyFilters()">
+            <option [value]="5">5</option>
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,84 @@
+<app-navbar></app-navbar>
+<div class="container-fluid">
+
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Welcome, {{ currentUser?.username }}!</h2>
+      <p class="text-muted">Role: {{ getRoles() }}</p>
+    </div>
+  </div>
+
+  <!-- Stats Cards - Show for all roles -->
+  <div class="row mt-4" *ngIf="hasAdminRole() || hasManagerRole() || hasFinanceRole()">
+    <div class="col-md-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5 class="card-title">Total Vendors</h5>
+          <h2>{{ stats.totalVendors }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h5 class="card-title">Paid Invoices</h5>
+          <h2>{{ stats.paidInvoices }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-warning">
+        <div class="card-body">
+          <h5 class="card-title">Pending Invoices</h5>
+          <h2>{{ stats.pendingInvoices }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-danger">
+        <div class="card-body">
+          <h5 class="card-title">Overdue Invoices</h5>
+          <h2>{{ stats.overdueInvoices }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Invoices - Show for all roles -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{ hasUserRole() ? 'My Invoices' : 'Recent Invoices' }}</h5>
+        </div>
+        <div class="card-body">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Invoice #</th>
+                <th>Vendor</th>
+                <th>Amount</th>
+                <th>Due Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let invoice of recentInvoices">
+                <td>{{ invoice.invoiceNumber }}</td>
+                <td>{{ invoice.vendorName }}</td>
+                <td>{{ invoice.totalAmount | currency:'INR' }}</td>
+                <td>{{ invoice.dueDate | date }}</td>
+                <td>
+                  <span [class]="'badge bg-' + getStatusColor(invoice.status)">
+                    {{ invoice.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,41 @@
+<app-navbar></app-navbar>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">My Invoices</h2>
+    <button class="btn btn-primary" routerLink="/invoices/new">
+      <i class="bi bi-plus-circle"></i> Create New Invoice
+    </button>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Invoice #</th>
+            <th>Vendor</th>
+            <th>Amount</th>
+            <th>Total</th>
+            <th>Invoice Date</th>
+            <th>Due Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let invoice of invoices">
+            <td>{{ invoice.invoiceNumber }}</td>
+            <td>{{ invoice.vendorName }}</td>
+            <td>{{ invoice.amount | currency:'INR' }}</td>
+            <td>{{ invoice.totalAmount | currency:'INR' }}</td>
+            <td>{{ invoice.invoiceDate | date }}</td>
+            <td>{{ invoice.dueDate | date }}</td>
+            <td>
+              <span [class]="'badge bg-' + getStatusColor(invoice.status)">
+                {{ invoice.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

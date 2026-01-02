@@ -1,0 +1,148 @@
+<app-navbar></app-navbar>
+<app-confirm-modal 
+  [title]="confirmTitle" 
+  [message]="confirmMessage" 
+  [showModal]="showConfirmModal"
+  (confirm)="onConfirm()"
+  (cancel)="onCancelConfirm()">
+</app-confirm-modal>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">User Management</h2>
+    <div class="d-flex align-items-center gap-3">
+      <!-- Search Box -->
+      <div class="input-group" style="width: 300px;">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input type="text" 
+               class="form-control" 
+               placeholder="Search users..."
+               [(ngModel)]="searchTerm"
+               (input)="onSearchChange()">
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of getPaginatedUsers()">
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              <div *ngIf="editingUserId !== user.id">
+                <span *ngIf="user.roles && user.roles.length > 0" class="badge bg-primary">
+                  {{ getRoleDisplayName(user.roles[0]) }}
+                </span>
+                <span *ngIf="!user.roles || user.roles.length === 0" class="text-muted">
+                  No role assigned
+                </span>
+              </div>
+              <div *ngIf="editingUserId === user.id" class="role-editor">
+                <div *ngFor="let role of availableRoles" class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="radio" 
+                    [name]="'role-' + user.id"
+                    [id]="'role-' + user.id + '-' + role"
+                    [checked]="isRoleSelected(user.id, role)"
+                    (change)="selectRole(user.id, role)">
+                  <label class="form-check-label" [for]="'role-' + user.id + '-' + role">
+                    {{ getRoleDisplayName(role) }}
+                  </label>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span [class]="'badge bg-' + (user.isActive ? 'success' : 'secondary')">
+                {{ user.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <div *ngIf="editingUserId !== user.id">
+                <button class="btn btn-sm btn-primary me-1" (click)="startEdit(user)">
+                  Edit Role
+                </button>
+                <button 
+                  class="btn btn-sm" 
+                  [class.btn-warning]="user.isActive"
+                  [class.btn-success]="!user.isActive"
+                  (click)="toggleUserStatus(user.id)">
+                  {{ user.isActive ? 'Deactivate' : 'Activate' }}
+                </button>
+              </div>
+              <div *ngIf="editingUserId === user.id">
+                <button class="btn btn-sm btn-success me-1" (click)="saveUserRoles(user.id)">
+                  Save
+                </button>
+                <button class="btn btn-sm btn-secondary" (click)="cancelEdit()">
+                  Cancel
+                </button>
+              </div>
+            </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <!-- No Results Message -->
+        <div *ngIf="filteredUsers.length === 0" class="text-center py-4">
+          <p class="text-muted">No users found matching your search criteria.</p>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1 || filteredUsers.length > 0" class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+        <div class="text-muted small">
+          Showing <strong>{{ (currentPage - 1) * itemsPerPage + 1 }}</strong> - 
+          <strong>{{ Math.min(currentPage * itemsPerPage, filteredUsers.length) }}</strong> of 
+          <strong>{{ filteredUsers.length }}</strong> users
+        </div>
+        <nav *ngIf="totalPages > 1">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <a class="page-link" (click)="previousPage()" style="cursor: pointer;" [class.pointer-events-none]="currentPage === 1">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+            <li *ngFor="let page of getPageNumbers()" 
+                class="page-item" 
+                [class.active]="page === currentPage">
+              <a class="page-link" (click)="goToPage(page)" style="cursor: pointer;">{{ page }}</a>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a class="page-link" (click)="nextPage()" style="cursor: pointer;" [class.pointer-events-none]="currentPage === totalPages">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+          <label class="mb-0 small text-muted">Per page:</label>
+          <select class="form-select form-select-sm" style="width: 70px;" 
+                  [(ngModel)]="itemsPerPage" 
+                  (change)="applyFilters()">
+            <option [value]="5">5</option>
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

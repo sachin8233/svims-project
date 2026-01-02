@@ -1,0 +1,245 @@
+<app-navbar></app-navbar>
+<div class="container-fluid">
+  <h2 class="mb-4">Reports & Analytics</h2>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading reports...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !loading" class="alert alert-danger" role="alert">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Reports Content -->
+  <div *ngIf="reportsData && !loading">
+    <!-- Invoice Statistics Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card text-white bg-primary">
+          <div class="card-body">
+            <h6 class="card-title">Total Invoices</h6>
+            <h2>{{ formatNumber(reportsData.invoiceStats.totalInvoices) }}</h2>
+            <small>Total Amount: {{ formatCurrency(reportsData.invoiceStats.totalInvoiceAmount) }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-warning">
+          <div class="card-body">
+            <h6 class="card-title">Pending</h6>
+            <h2>{{ formatNumber(reportsData.invoiceStats.pendingInvoices) }}</h2>
+            <small>Amount: {{ formatCurrency(reportsData.invoiceStats.pendingAmount) }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-info">
+          <div class="card-body">
+            <h6 class="card-title">Approved</h6>
+            <h2>{{ formatNumber(reportsData.invoiceStats.approvedInvoices) }}</h2>
+            <small>Amount: {{ formatCurrency(reportsData.invoiceStats.approvedAmount) }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-success">
+          <div class="card-body">
+            <h6 class="card-title">Paid</h6>
+            <h2>{{ formatNumber(reportsData.invoiceStats.paidInvoices) }}</h2>
+            <small>Amount: {{ formatCurrency(reportsData.invoiceStats.paidAmount) }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card text-white bg-danger">
+          <div class="card-body">
+            <h6 class="card-title">Overdue</h6>
+            <h2>{{ formatNumber(reportsData.invoiceStats.overdueInvoices) }}</h2>
+            <small>Amount: {{ formatCurrency(reportsData.invoiceStats.overdueAmount) }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-secondary">
+          <div class="card-body">
+            <h6 class="card-title">Rejected</h6>
+            <h2>{{ formatNumber(reportsData.invoiceStats.rejectedInvoices) }}</h2>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white bg-dark">
+          <div class="card-body">
+            <h6 class="card-title">Total Vendors</h6>
+            <h2>{{ formatNumber(reportsData.vendorStats.totalVendors) }}</h2>
+            <small>Active: {{ formatNumber(reportsData.vendorStats.activeVendors) }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-white" [ngClass]="'bg-' + (reportsData.vendorStats.highRiskVendors > 0 ? 'danger' : 'success')">
+          <div class="card-body">
+            <h6 class="card-title">High Risk Vendors</h6>
+            <h2>{{ formatNumber(reportsData.vendorStats.highRiskVendors) }}</h2>
+            <small>Avg Risk: {{ reportsData.vendorStats.averageRiskScore.toFixed(1) }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Financial Summary</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <strong>Total Invoice Amount:</strong><br>
+                <span class="h4 text-primary">{{ formatCurrency(reportsData.financialSummary.totalInvoiceAmount) }}</span>
+              </div>
+              <div class="col-md-3">
+                <strong>Total Paid:</strong><br>
+                <span class="h4 text-success">{{ formatCurrency(reportsData.financialSummary.totalPaidAmount) }}</span>
+              </div>
+              <div class="col-md-3">
+                <strong>Outstanding:</strong><br>
+                <span class="h4 text-warning">{{ formatCurrency(reportsData.financialSummary.totalOutstandingAmount) }}</span>
+              </div>
+              <div class="col-md-3">
+                <strong>Total GST:</strong><br>
+                <span class="h4 text-info">{{ formatCurrency(reportsData.financialSummary.totalGstAmount) }}</span>
+                <small class="d-block text-muted">
+                  CGST: {{ formatCurrency(reportsData.financialSummary.totalCgstAmount) }} | 
+                  SGST: {{ formatCurrency(reportsData.financialSummary.totalSgstAmount) }} | 
+                  IGST: {{ formatCurrency(reportsData.financialSummary.totalIgstAmount) }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Breakdown -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Invoice Status Breakdown</h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let status of Object.keys(reportsData.statusBreakdown)">
+                  <td>
+                    <span class="badge" [ngClass]="'bg-' + getStatusColor(status)">
+                      {{ status }}
+                    </span>
+                  </td>
+                  <td>{{ formatNumber(reportsData.statusBreakdown[status]) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Trends -->
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Monthly Trends (Last 6 Months)</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Invoices</th>
+                    <th>Invoice Amount</th>
+                    <th>Paid Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let trend of reportsData.monthlyTrends">
+                    <td>{{ trend.month }}</td>
+                    <td>{{ formatNumber(trend.invoiceCount) }}</td>
+                    <td>{{ formatCurrency(trend.invoiceAmount) }}</td>
+                    <td>{{ formatCurrency(trend.paidAmount) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Vendors -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Top Vendors by Invoice Amount</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Vendor Name</th>
+                    <th>Invoice Count</th>
+                    <th>Total Amount</th>
+                    <th>Paid Amount</th>
+                    <th>Outstanding</th>
+                    <th>Risk Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let vendor of reportsData.topVendors">
+                    <td>{{ vendor.vendorName }}</td>
+                    <td>{{ formatNumber(vendor.invoiceCount) }}</td>
+                    <td>{{ formatCurrency(vendor.totalAmount) }}</td>
+                    <td>{{ formatCurrency(vendor.paidAmount) }}</td>
+                    <td>
+                      <span [ngClass]="vendor.outstandingAmount > 0 ? 'text-danger' : 'text-success'">
+                        {{ formatCurrency(vendor.outstandingAmount) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="vendor.riskScore && vendor.riskScore > 50 ? 'bg-danger' : 'bg-info'">
+                        {{ vendor.riskScore ? vendor.riskScore.toFixed(1) : 'N/A' }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr *ngIf="reportsData.topVendors.length === 0">
+                    <td colspan="6" class="text-center text-muted">No vendor data available</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

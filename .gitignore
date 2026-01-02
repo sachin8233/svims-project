@@ -1,0 +1,14 @@
+# Backend
+/backend/target/
+backend/.classpath
+backend/.project
+backend/.settings/
+
+# Frontend
+/frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Common
+.env
+*.log

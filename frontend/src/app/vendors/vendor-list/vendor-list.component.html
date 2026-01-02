@@ -1,0 +1,113 @@
+<app-navbar></app-navbar>
+<app-confirm-modal 
+  [title]="confirmTitle" 
+  [message]="confirmMessage" 
+  [showModal]="showConfirmModal"
+  (confirm)="onConfirm()"
+  (cancel)="onCancelConfirm()">
+</app-confirm-modal>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Vendors</h2>
+    <div class="d-flex align-items-center gap-3">
+      <!-- Search Box -->
+      <div class="input-group" style="width: 300px;">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input type="text" 
+               class="form-control" 
+               placeholder="Search vendors..."
+               [(ngModel)]="searchTerm"
+               (input)="onSearchChange()">
+      </div>
+      <button class="btn btn-primary" *ngIf="canEditVendor()" routerLink="/vendors/new">Add New Vendor</button>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>GSTIN</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Risk Score</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let vendor of getPaginatedVendors()">
+            <td>{{ vendor.id }}</td>
+            <td>{{ vendor.name }}</td>
+            <td>{{ vendor.gstin || 'N/A' }}</td>
+            <td>{{ vendor.email }}</td>
+            <td>
+              <span [class]="'badge bg-' + (vendor.status === 'ACTIVE' ? 'success' : 'secondary')">
+                {{ vendor.status }}
+              </span>
+            </td>
+            <td>
+              <span [class]="'badge bg-' + (vendor.riskScore && vendor.riskScore > 50 ? 'danger' : 'info')">
+                {{ vendor.riskScore || 0 }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary" *ngIf="canEditVendor()" (click)="editVendor(vendor.id!)">Edit</button>
+              <button class="btn btn-sm btn-danger" *ngIf="canDeleteVendor()" (click)="deleteVendor(vendor.id!)">Delete</button>
+              <span *ngIf="!canEditVendor()" class="text-muted">Read Only</span>
+            </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <!-- No Results Message -->
+        <div *ngIf="filteredVendors.length === 0" class="text-center py-4">
+          <p class="text-muted">No vendors found matching your search criteria.</p>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1 || filteredVendors.length > 0" class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+        <div class="text-muted small">
+          Showing <strong>{{ (currentPage - 1) * itemsPerPage + 1 }}</strong> - 
+          <strong>{{ Math.min(currentPage * itemsPerPage, filteredVendors.length) }}</strong> of 
+          <strong>{{ filteredVendors.length }}</strong> vendors
+        </div>
+        <nav *ngIf="totalPages > 1">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <a class="page-link" (click)="previousPage()" style="cursor: pointer;" [class.pointer-events-none]="currentPage === 1">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+            <li *ngFor="let page of getPageNumbers()" 
+                class="page-item" 
+                [class.active]="page === currentPage">
+              <a class="page-link" (click)="goToPage(page)" style="cursor: pointer;">{{ page }}</a>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a class="page-link" (click)="nextPage()" style="cursor: pointer;" [class.pointer-events-none]="currentPage === totalPages">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+          <label class="mb-0 small text-muted">Per page:</label>
+          <select class="form-select form-select-sm" style="width: 70px;" 
+                  [(ngModel)]="itemsPerPage" 
+                  (change)="applyFilters()">
+            <option [value]="5">5</option>
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

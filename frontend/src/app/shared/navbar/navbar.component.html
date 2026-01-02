@@ -1,0 +1,89 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" (click)="navigateToDashboard()" style="cursor: pointer;">SVIMS</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <!-- Dashboard - All Roles -->
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+        </li>
+
+        <!-- ADMIN Menu Items -->
+        <ng-container *ngIf="hasAdminRole()">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/vendors" routerLinkActive="active">Vendor Management</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/users" routerLinkActive="active">User Management</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/invoices" routerLinkActive="active">All Invoices</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/reports" routerLinkActive="active">Reports</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/audit-logs" routerLinkActive="active">Audit Logs</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/settings" routerLinkActive="active">Settings</a>
+          </li>
+        </ng-container>
+
+        <!-- MANAGER Menu Items -->
+        <ng-container *ngIf="hasManagerRole() && !hasAdminRole()">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/pending-approvals" routerLinkActive="active">Pending Approvals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/invoices" routerLinkActive="active">Invoices</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/vendors" routerLinkActive="active">Vendors</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/approval-history" routerLinkActive="active">Approval History</a>
+          </li>
+        </ng-container>
+
+        <!-- FINANCE Menu Items -->
+        <ng-container *ngIf="hasFinanceRole() && !hasAdminRole()">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/approved-invoices" routerLinkActive="active">Approved Invoices</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/payments" routerLinkActive="active">Payments</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/vendors" routerLinkActive="active">Vendors</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/payment-reports" routerLinkActive="active">Payment Reports</a>
+          </li>
+        </ng-container>
+
+        <!-- USER Menu Items -->
+        <ng-container *ngIf="hasUserRole() && !hasAdminRole() && !hasManagerRole() && !hasFinanceRole()">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/my-invoices" routerLinkActive="active">My Invoices</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/profile" routerLinkActive="active">Profile</a>
+          </li>
+        </ng-container>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <span class="navbar-text me-3">Welcome, {{ currentUser?.username }}</span>
+        </li>
+        <li class="nav-item">
+          <button class="btn btn-outline-light btn-sm" (click)="logout()">Logout</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+

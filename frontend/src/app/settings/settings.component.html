@@ -1,0 +1,139 @@
+<app-navbar></app-navbar>
+<app-confirm-modal 
+  [title]="confirmTitle" 
+  [message]="confirmMessage" 
+  [showModal]="showConfirmModal"
+  (confirm)="onConfirm()"
+  (cancel)="onCancelConfirm()">
+</app-confirm-modal>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Settings - Approval Rules</h2>
+    <button class="btn btn-primary" (click)="openAddForm()" *ngIf="!showForm">Add New Rule</button>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="alert alert-success" *ngIf="successMessage" role="alert">
+    {{ successMessage }}
+  </div>
+  <div class="alert alert-danger" *ngIf="errorMessage" role="alert">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Approval Rules Form -->
+  <div class="card mb-4" *ngIf="showForm">
+    <div class="card-header">
+      <h5 class="mb-0">{{ isEditMode ? 'Edit Approval Rule' : 'Add New Approval Rule' }}</h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="ruleForm" (ngSubmit)="onSubmit()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="minAmount" class="form-label">Minimum Amount (₹)</label>
+            <input type="number" class="form-control" id="minAmount" formControlName="minAmount" 
+                   step="0.01" min="0" required>
+            <div class="text-danger" *ngIf="ruleForm.get('minAmount')?.invalid && ruleForm.get('minAmount')?.touched">
+              Minimum amount is required and must be >= 0
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="maxAmount" class="form-label">Maximum Amount (₹)</label>
+            <input type="number" class="form-control" id="maxAmount" formControlName="maxAmount" 
+                   step="0.01" min="0.01" required>
+            <div class="text-danger" *ngIf="ruleForm.get('maxAmount')?.invalid && ruleForm.get('maxAmount')?.touched">
+              Maximum amount is required and must be > 0
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="approvalLevels" class="form-label">Approval Levels</label>
+            <input type="number" class="form-control" id="approvalLevels" formControlName="approvalLevels" 
+                   min="1" max="4" required>
+            <small class="form-text text-muted">Number of approval levels required (1-4)</small>
+            <div class="text-danger" *ngIf="ruleForm.get('approvalLevels')?.invalid && ruleForm.get('approvalLevels')?.touched">
+              Approval levels must be between 1 and 4
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="priority" class="form-label">Priority</label>
+            <input type="number" class="form-control" id="priority" formControlName="priority" 
+                   min="0">
+            <small class="form-text text-muted">Lower number = higher priority</small>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="requiredRoles" class="form-label">Required Roles (Comma-separated)</label>
+          <input type="text" class="form-control" id="requiredRoles" formControlName="requiredRoles" 
+                 placeholder="ROLE_MANAGER,ROLE_FINANCE,ROLE_ADMIN">
+          <small class="form-text text-muted">Optional: Specify required roles for this rule</small>
+        </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" id="isActive" formControlName="isActive">
+          <label class="form-check-label" for="isActive">Active</label>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary" [disabled]="ruleForm.invalid">
+            {{ isEditMode ? 'Update Rule' : 'Create Rule' }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancelForm()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Approval Rules List -->
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Approval Rules</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Amount Range</th>
+              <th>Approval Levels</th>
+              <th>Required Roles</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rule of approvalRules">
+              <td>{{ rule.id }}</td>
+              <td>
+                {{ formatCurrency(rule.minAmount) }} - {{ formatCurrency(rule.maxAmount) }}
+              </td>
+              <td>
+                <span class="badge bg-info">{{ rule.approvalLevels }} Level(s)</span>
+              </td>
+              <td>{{ rule.requiredRoles || 'Any' }}</td>
+              <td>{{ rule.priority || 0 }}</td>
+              <td>
+                <span [class]="'badge bg-' + (rule.isActive ? 'success' : 'secondary')">
+                  {{ rule.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button class="btn btn-primary" (click)="openEditForm(rule)">Edit</button>
+                  <button class="btn btn-warning" (click)="toggleRuleStatus(rule.id!)">
+                    {{ rule.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+                  <button class="btn btn-danger" (click)="deleteRule(rule.id!)">Delete</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="approvalRules.length === 0">
+              <td colspan="7" class="text-center text-muted">No approval rules found. Create one to get started.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+

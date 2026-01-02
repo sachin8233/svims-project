@@ -1,0 +1,225 @@
+<app-navbar></app-navbar>
+<div class="container-fluid">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3">Loading invoice details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="alert alert-danger" role="alert">
+    {{ error }}
+    <button class="btn btn-sm btn-outline-danger ms-2" (click)="goBack()">Go Back</button>
+  </div>
+
+  <!-- Invoice Details -->
+  <div *ngIf="invoice && !loading" class="invoice-view">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-0">Invoice Details</h2>
+        <p class="text-muted mb-0">Invoice #{{ invoice.invoiceNumber }}</p>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" (click)="goBack()">
+          <i class="bi bi-arrow-left"></i> Back to List
+        </button>
+        <button *ngIf="canEdit()" class="btn btn-primary" (click)="editInvoice()">
+          <i class="bi bi-pencil"></i> Edit Invoice
+        </button>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Left Column - Invoice Information -->
+      <div class="col-lg-8">
+        <!-- Invoice Items Card -->
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Invoice Items</h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="invoice.items && invoice.items.length > 0" class="table-responsive">
+              <table class="table table-bordered">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 5%">#</th>
+                    <th style="width: 50%">Description</th>
+                    <th style="width: 15%" class="text-end">Quantity</th>
+                    <th style="width: 15%" class="text-end">Unit Price</th>
+                    <th style="width: 15%" class="text-end">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of invoice.items; let i = index">
+                    <td>{{ i + 1 }}</td>
+                    <td>{{ item.description }}</td>
+                    <td class="text-end">{{ item.quantity }}</td>
+                    <td class="text-end">{{ formatCurrency(item.unitPrice) }}</td>
+                    <td class="text-end"><strong>{{ formatCurrency(item.amount) }}</strong></td>
+                  </tr>
+                </tbody>
+                <tfoot class="table-light">
+                  <tr>
+                    <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                    <td class="text-end"><strong>{{ formatCurrency(invoice.amount) }}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div *ngIf="!invoice.items || invoice.items.length === 0" class="alert alert-info">
+              No items found for this invoice.
+            </div>
+          </div>
+        </div>
+
+        <!-- Approval Information -->
+        <div *ngIf="invoice.status === 'PENDING' && approvalInfo" class="card mb-4">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Approval Status</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Approval Progress</label>
+              <div class="progress mb-2" style="height: 25px;">
+                <div class="progress-bar" 
+                     [ngClass]="{
+                       'bg-success': approvalInfo.isFullyApproved,
+                       'bg-warning': !approvalInfo.isFullyApproved
+                     }"
+                     [style.width.%]="approvalInfo.requiredApprovalLevels ? 
+                       (approvalInfo.currentApprovalLevel / approvalInfo.requiredApprovalLevels * 100) : 0">
+                  {{ approvalInfo.currentApprovalLevel }} / {{ approvalInfo.requiredApprovalLevels }}
+                </div>
+              </div>
+              <div class="d-flex justify-content-between">
+                <small class="text-muted">
+                  Current Level: <strong>{{ approvalInfo.currentApprovalLevel }}</strong>
+                </small>
+                <small class="text-muted">
+                  Required Levels: <strong>{{ approvalInfo.requiredApprovalLevels }}</strong>
+                </small>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Remaining Approvals:</strong></p>
+                <p class="text-muted">{{ approvalInfo.remainingApprovals }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Approval Rule Range:</strong></p>
+                <p class="text-muted">{{ approvalInfo.approvalRuleRange }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Invoice Summary -->
+      <div class="col-lg-4">
+        <!-- Status Card -->
+        <div class="card mb-4">
+          <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Invoice Status</h5>
+          </div>
+          <div class="card-body">
+            <div class="text-center mb-3">
+              <span [ngClass]="'badge bg-' + getStatusColor(invoice.status) + ' fs-6 px-3 py-2'">
+                {{ invoice.status }}
+              </span>
+            </div>
+            <hr>
+            <div class="mb-2">
+              <small class="text-muted">Invoice Number</small>
+              <p class="mb-0 fw-bold">{{ invoice.invoiceNumber || 'N/A' }}</p>
+            </div>
+            <div class="mb-2">
+              <small class="text-muted">Invoice Date</small>
+              <p class="mb-0">{{ formatDate(invoice.invoiceDate) }}</p>
+            </div>
+            <div class="mb-2">
+              <small class="text-muted">Due Date</small>
+              <p class="mb-0">{{ formatDate(invoice.dueDate) }}</p>
+            </div>
+            <div *ngIf="invoice.isOverdue" class="alert alert-danger py-2 mb-0">
+              <small><i class="bi bi-exclamation-triangle"></i> This invoice is overdue</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vendor Information -->
+        <div class="card mb-4">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-building"></i> Vendor Information</h5>
+          </div>
+          <div class="card-body">
+            <p class="mb-0 fw-bold">{{ invoice.vendorName || 'N/A' }}</p>
+            <small class="text-muted">Vendor ID: {{ invoice.vendorId }}</small>
+          </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="card mb-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-calculator"></i> Financial Summary</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Subtotal:</span>
+              <strong>{{ formatCurrency(invoice.amount) }}</strong>
+            </div>
+            <div *ngIf="invoice.cgstAmount && invoice.cgstAmount > 0" class="d-flex justify-content-between mb-2">
+              <span>CGST:</span>
+              <span>{{ formatCurrency(invoice.cgstAmount) }}</span>
+            </div>
+            <div *ngIf="invoice.sgstAmount && invoice.sgstAmount > 0" class="d-flex justify-content-between mb-2">
+              <span>SGST:</span>
+              <span>{{ formatCurrency(invoice.sgstAmount) }}</span>
+            </div>
+            <div *ngIf="invoice.igstAmount && invoice.igstAmount > 0" class="d-flex justify-content-between mb-2">
+              <span>IGST:</span>
+              <span>{{ formatCurrency(invoice.igstAmount) }}</span>
+            </div>
+            <div *ngIf="getTotalGst() > 0" class="d-flex justify-content-between mb-2">
+              <span>Total GST:</span>
+              <span>{{ formatCurrency(getTotalGst()) }}</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+              <span class="fs-5 fw-bold">Total Amount:</span>
+              <span class="fs-5 fw-bold text-success">{{ formatCurrency(invoice.totalAmount) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="card">
+          <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-clock"></i> Additional Information</h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="invoice.currentApprovalLevel !== undefined && invoice.currentApprovalLevel !== null" class="mb-2">
+              <small class="text-muted">Current Approval Level</small>
+              <p class="mb-0">{{ invoice.currentApprovalLevel }}</p>
+            </div>
+            <div *ngIf="invoice.escalationLevel !== undefined && invoice.escalationLevel !== null && invoice.escalationLevel > 0" class="mb-2">
+              <small class="text-muted">Escalation Level</small>
+              <p class="mb-0 text-danger">{{ invoice.escalationLevel }}</p>
+            </div>
+            <div *ngIf="invoice.createdAt" class="mb-2">
+              <small class="text-muted">Created At</small>
+              <p class="mb-0 small">{{ formatDate(invoice.createdAt) }}</p>
+            </div>
+            <div *ngIf="invoice.updatedAt" class="mb-2">
+              <small class="text-muted">Last Updated</small>
+              <p class="mb-0 small">{{ formatDate(invoice.updatedAt) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

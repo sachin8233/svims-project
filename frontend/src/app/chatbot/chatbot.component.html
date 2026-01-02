@@ -1,0 +1,348 @@
+<div class="chatbot-container">
+  <div class="chatbot-header">
+    <h3>
+      <i class="fas fa-comments"></i> AI Assistant
+      <span class="role-badge">{{ getUserRole() }}</span>
+    </h3>
+    <div class="header-actions">
+      <button class="help-btn" (click)="getHelp()" [disabled]="isLoading" title="Help">
+        <i class="fas fa-question-circle"></i>
+        <span>Help</span>
+      </button>
+      <button class="close-btn" (click)="closePanel()" title="Close">
+        <i class="fas fa-times"></i>
+        <span>Close</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-messages" #chatContainer>
+    <div *ngFor="let message of messages" 
+         [class]="'message ' + (message.isUser ? 'user-message' : 'bot-message')">
+      <div class="message-content">
+        <div class="message-text" [innerHTML]="formatMessage(message.text)"></div>
+        
+        <!-- Display Structured Data -->
+        <div *ngIf="hasData(message) && !message.isUser" class="message-data">
+          <!-- Invoice Data -->
+          <div *ngIf="getDataByType(message, 'invoice').length > 0" class="data-section">
+            <h4 class="data-title"><i class="fas fa-file-invoice"></i> Invoice Details</h4>
+            <div class="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Invoice #</th>
+                    <th>Vendor</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Due Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let invoice of getDataByType(message, 'invoice')">
+                    <td>{{ invoice.invoiceNumber }}</td>
+                    <td>{{ invoice.vendorName }}</td>
+                    <td>{{ formatCurrency(invoice.totalAmount) }}</td>
+                    <td><span class="status-badge" [class]="'status-' + invoice.status?.toLowerCase()">{{ invoice.status }}</span></td>
+                    <td>{{ invoice.dueDate }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Payment Data -->
+          <div *ngIf="getDataByType(message, 'payment').length > 0" class="data-section">
+            <h4 class="data-title"><i class="fas fa-money-bill-wave"></i> Payment Details</h4>
+            <div class="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Invoice ID</th>
+                    <th>Amount</th>
+                    <th>Payment Date</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let payment of getDataByType(message, 'payment')">
+                    <td>#{{ payment.invoiceId }}</td>
+                    <td>{{ formatCurrency(payment.amount) }}</td>
+                    <td>{{ payment.paymentDate }}</td>
+                    <td>{{ payment.paymentMethod || '-' }}</td>
+                    <td>{{ payment.transactionReference || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Vendor Data -->
+          <div *ngIf="getDataByType(message, 'vendor').length > 0" class="data-section">
+            <h4 class="data-title"><i class="fas fa-building"></i> Vendor Details</h4>
+            <div class="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Vendor Name</th>
+                    <th>Email</th>
+                    <th>GSTIN</th>
+                    <th>Status</th>
+                    <th>Risk Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let vendor of getDataByType(message, 'vendor')">
+                    <td>{{ vendor.name }}</td>
+                    <td>{{ vendor.email }}</td>
+                    <td>{{ vendor.gstin || '-' }}</td>
+                    <td><span class="status-badge" [class]="'status-' + vendor.status?.toLowerCase()">{{ vendor.status }}</span></td>
+                    <td>{{ vendor.riskScore || 0 }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Approval History Data -->
+          <div *ngIf="getDataByType(message, 'approval').length > 0" class="data-section">
+            <h4 class="data-title"><i class="fas fa-history"></i> Approval History</h4>
+            <div class="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Invoice #</th>
+                    <th>Level</th>
+                    <th>Approved By</th>
+                    <th>Status</th>
+                    <th>Comments</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let approval of getDataByType(message, 'approval')">
+                    <td>{{ approval.invoiceNumber }}</td>
+                    <td>L{{ approval.approvalLevel }}</td>
+                    <td>{{ approval.approvedBy }}</td>
+                    <td><span class="status-badge" [class]="'status-' + approval.status?.toLowerCase()">{{ approval.status }}</span></td>
+                    <td>{{ approval.comments || '-' }}</td>
+                    <td>{{ approval.createdAt }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Approval Rules Data -->
+          <div *ngIf="getDataByType(message, 'approvalRule').length > 0" class="data-section">
+            <h4 class="data-title"><i class="fas fa-list-check"></i> Approval Level Requirements</h4>
+            <div class="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Amount Range</th>
+                    <th>Approval Levels</th>
+                    <th>Required Roles</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let rule of getDataByType(message, 'approvalRule')">
+                    <td>{{ rule.range }}</td>
+                    <td>{{ rule.approvalLevels }} level(s)</td>
+                    <td>{{ rule.requiredRoles || 'Any' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Statistics Data -->
+          <div *ngIf="getDataByType(message, 'statistics').length > 0" class="data-section">
+            <h4 class="data-title"><i class="fas fa-chart-bar"></i> Statistics</h4>
+            <div class="stats-grid">
+              <div *ngFor="let stat of getDataByType(message, 'statistics')" class="stats-container">
+                <div *ngIf="stat.totalInvoices != null" class="stat-card">
+                  <div class="stat-value">{{ stat.totalInvoices }}</div>
+                  <div class="stat-label">Total Invoices</div>
+                </div>
+                <div *ngIf="stat.pendingInvoices != null" class="stat-card">
+                  <div class="stat-value">{{ stat.pendingInvoices }}</div>
+                  <div class="stat-label">Pending</div>
+                </div>
+                <div *ngIf="stat.approvedInvoices != null" class="stat-card">
+                  <div class="stat-value">{{ stat.approvedInvoices }}</div>
+                  <div class="stat-label">Approved</div>
+                </div>
+                <div *ngIf="stat.paidInvoices != null" class="stat-card">
+                  <div class="stat-value">{{ stat.paidInvoices }}</div>
+                  <div class="stat-label">Paid</div>
+                </div>
+                <div *ngIf="stat.totalPayments != null" class="stat-card">
+                  <div class="stat-value">{{ stat.totalPayments }}</div>
+                  <div class="stat-label">Total Payments</div>
+                </div>
+                <div *ngIf="stat.totalPaidAmount != null" class="stat-card">
+                  <div class="stat-value">{{ formatCurrency(stat.totalPaidAmount) }}</div>
+                  <div class="stat-label">Total Paid</div>
+                </div>
+                <div *ngIf="stat.totalVendors != null" class="stat-card">
+                  <div class="stat-value">{{ stat.totalVendors }}</div>
+                  <div class="stat-label">Vendors</div>
+                </div>
+                <div *ngIf="stat.totalUsers != null" class="stat-card">
+                  <div class="stat-value">{{ stat.totalUsers }}</div>
+                  <div class="stat-label">Users</div>
+                </div>
+                <div *ngIf="stat.pendingApprovals != null" class="stat-card">
+                  <div class="stat-value">{{ stat.pendingApprovals }}</div>
+                  <div class="stat-label">Pending Approvals</div>
+                </div>
+                <div *ngIf="stat.myTotalInvoices != null" class="stat-card">
+                  <div class="stat-value">{{ stat.myTotalInvoices }}</div>
+                  <div class="stat-label">My Invoices</div>
+                </div>
+                <div *ngIf="stat.myApprovals != null" class="stat-card">
+                  <div class="stat-value">{{ stat.myApprovals }}</div>
+                  <div class="stat-label">My Approvals</div>
+                </div>
+                <div *ngIf="stat.myApprovedCount != null" class="stat-card">
+                  <div class="stat-value">{{ stat.myApprovedCount }}</div>
+                  <div class="stat-label">Approved</div>
+                </div>
+                <div *ngIf="stat.myRejectedCount != null" class="stat-card">
+                  <div class="stat-value">{{ stat.myRejectedCount }}</div>
+                  <div class="stat-label">Rejected</div>
+                </div>
+                <div *ngIf="stat.partiallyPaidInvoices != null" class="stat-card">
+                  <div class="stat-value">{{ stat.partiallyPaidInvoices }}</div>
+                  <div class="stat-label">Partially Paid</div>
+                </div>
+                <div *ngIf="stat.totalOutstandingAmount != null" class="stat-card">
+                  <div class="stat-value">{{ formatCurrency(stat.totalOutstandingAmount) }}</div>
+                  <div class="stat-label">Outstanding</div>
+                </div>
+                <div *ngIf="stat.averageInvoiceAmount != null" class="stat-card">
+                  <div class="stat-value">{{ formatCurrency(stat.averageInvoiceAmount) }}</div>
+                  <div class="stat-label">Avg Invoice</div>
+                </div>
+                <div *ngIf="stat.todayInvoices != null" class="stat-card">
+                  <div class="stat-value">{{ stat.todayInvoices }}</div>
+                  <div class="stat-label">Today's Invoices</div>
+                </div>
+                <div *ngIf="stat.monthlyRevenue != null" class="stat-card">
+                  <div class="stat-value">{{ formatCurrency(stat.monthlyRevenue) }}</div>
+                  <div class="stat-label">Monthly Revenue</div>
+                </div>
+                <div *ngIf="stat.todayPayments != null" class="stat-card">
+                  <div class="stat-value">{{ stat.todayPayments }}</div>
+                  <div class="stat-label">Today's Payments</div>
+                </div>
+                <div *ngIf="stat.todayPaidAmount != null" class="stat-card">
+                  <div class="stat-value">{{ formatCurrency(stat.todayPaidAmount) }}</div>
+                  <div class="stat-label">Today Paid</div>
+                </div>
+                <div *ngIf="stat.monthlyPaidAmount != null" class="stat-card">
+                  <div class="stat-value">{{ formatCurrency(stat.monthlyPaidAmount) }}</div>
+                  <div class="stat-label">Monthly Paid</div>
+                </div>
+                <div *ngIf="stat.totalApprovals != null" class="stat-card">
+                  <div class="stat-value">{{ stat.totalApprovals }}</div>
+                  <div class="stat-label">Total Approvals</div>
+                </div>
+                <div *ngIf="stat.approvedCount != null" class="stat-card">
+                  <div class="stat-value">{{ stat.approvedCount }}</div>
+                  <div class="stat-label">Approved</div>
+                </div>
+                <div *ngIf="stat.rejectedCount != null" class="stat-card">
+                  <div class="stat-value">{{ stat.rejectedCount }}</div>
+                  <div class="stat-label">Rejected</div>
+                </div>
+                <div *ngIf="stat.mostActiveUsers != null" class="stat-card" style="grid-column: span 2;">
+                  <div class="stat-value" style="font-size: 0.9rem; white-space: normal;">{{ stat.mostActiveUsers }}</div>
+                  <div class="stat-label">Most Active Users</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-time">{{ message.timestamp | date:'short' }}</div>
+        <div *ngIf="message.suggestion" class="suggestion">
+          <i class="fas fa-lightbulb"></i> {{ message.suggestion }}
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="isLoading" class="message bot-message">
+      <div class="message-content">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Initial Questions (shown only when chat is empty) -->
+  <div class="quick-questions" *ngIf="messages.length <= 1">
+    <p class="quick-questions-label">
+      <i class="fas fa-lightbulb"></i> Quick Questions - Select any option:
+    </p>
+    <div class="quick-question-buttons">
+      <button *ngFor="let question of getQuickQuestions()" 
+              class="quick-question-btn"
+              (click)="sendQuickMessage(question)"
+              [disabled]="isLoading"
+              [title]="question">
+        <i class="fas fa-question-circle"></i>
+        {{ question }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Follow-up Questions (shown after responses when there are remaining questions) -->
+  <div class="quick-questions follow-up-questions" *ngIf="messages.length > 1 && hasRemainingQuestions() && !isLoading">
+    <div class="follow-up-header">
+      <p class="quick-questions-label">
+        <i class="fas fa-arrow-right"></i> You might also want to ask:
+        <span class="question-count">({{ getRemainingQuestions().length }} remaining)</span>
+      </p>
+      <button class="minimize-btn" 
+              (click)="toggleRemainingQuestions()"
+              [title]="showRemainingQuestions ? 'Minimize' : 'Expand'">
+        <span *ngIf="showRemainingQuestions">Minimize</span>
+        <span *ngIf="!showRemainingQuestions">Expand</span>
+        <i class="fas" [class.fa-chevron-up]="showRemainingQuestions" [class.fa-chevron-down]="!showRemainingQuestions"></i>
+      </button>
+    </div>
+    <div class="quick-question-buttons" *ngIf="showRemainingQuestions" [@slideDown]>
+      <button *ngFor="let question of getRemainingQuestions().slice(0, 5)" 
+              class="quick-question-btn follow-up-btn"
+              (click)="sendQuickMessage(question)"
+              [disabled]="isLoading"
+              [title]="question">
+        <i class="fas fa-question-circle"></i>
+        {{ question }}
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-input-container">
+    <input type="text" 
+           class="chat-input" 
+           [(ngModel)]="currentMessage"
+           (keypress)="onKeyPress($event)"
+           placeholder="Type your message here..."
+           [disabled]="isLoading"
+           #messageInput>
+    <button class="send-btn" 
+            (click)="sendMessage()" 
+            [disabled]="!currentMessage.trim() || isLoading">
+      <i class="fas fa-paper-plane"></i>
+      <span>Send</span>
+    </button>
+  </div>
+</div>
+

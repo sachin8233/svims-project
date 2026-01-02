@@ -1,0 +1,161 @@
+<app-navbar></app-navbar>
+<app-modal 
+  [title]="modalTitle" 
+  [message]="modalMessage" 
+  [type]="modalType" 
+  [showModal]="showModal"
+  (closeModal)="closeModal()">
+</app-modal>
+<div class="container-fluid">
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="mb-0">{{ isEditMode ? 'Edit' : 'Create' }} Invoice</h2>
+  </div>
+  
+  <!-- Upload Invoice Sheet Section -->
+  <div class="card mb-3" *ngIf="!isEditMode">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0"><i class="bi bi-upload"></i> Upload Invoice Sheet</h5>
+    </div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label">Upload Excel/CSV File</label>
+        <input type="file" 
+               class="form-control" 
+               accept=".xlsx,.xls,.csv"
+               (change)="onFileSelected($event)"
+               #fileInput>
+        <small class="form-text text-muted">
+          Supported formats: Excel (.xlsx, .xls) or CSV (.csv). Max size: 5MB
+        </small>
+      </div>
+      
+      <!-- Success Message -->
+      <div *ngIf="uploadSuccess" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> Invoice data loaded successfully from file!
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      
+      <!-- Error Message -->
+      <div *ngIf="uploadError" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> {{ uploadError }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="invoiceForm" (ngSubmit)="onSubmit()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Vendor *</label>
+            <select class="form-select" formControlName="vendorId">
+              <option value="">Select Vendor</option>
+              <option *ngFor="let vendor of vendors" [value]="vendor.id">
+                {{ vendor.name }}
+              </option>
+            </select>
+            <div *ngIf="invoiceForm.get('vendorId')?.invalid && invoiceForm.get('vendorId')?.touched" 
+                 class="text-danger">Vendor is required</div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Invoice Date *</label>
+            <input type="date" class="form-control" formControlName="invoiceDate">
+            <div *ngIf="invoiceForm.get('invoiceDate')?.invalid && invoiceForm.get('invoiceDate')?.touched" 
+                 class="text-danger">Invoice date is required</div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Due Date *</label>
+            <input type="date" class="form-control" formControlName="dueDate">
+            <div *ngIf="invoiceForm.get('dueDate')?.invalid && invoiceForm.get('dueDate')?.touched" 
+                 class="text-danger">Due date is required</div>
+          </div>
+        </div>
+
+        <!-- Invoice Items Section -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Invoice Items</h5>
+            <button type="button" class="btn btn-sm btn-success" (click)="addItem()">
+              <i class="bi bi-plus-circle"></i> Add Item
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 5%">#</th>
+                  <th style="width: 40%">Description *</th>
+                  <th style="width: 15%">Quantity *</th>
+                  <th style="width: 20%">Unit Price (₹) *</th>
+                  <th style="width: 15%">Amount (₹)</th>
+                  <th style="width: 5%">Action</th>
+                </tr>
+              </thead>
+              <tbody formArrayName="items">
+                <tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                  <td>{{ i + 1 }}</td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" 
+                           formControlName="description" 
+                           placeholder="Enter item description">
+                    <div *ngIf="item.get('description')?.invalid && item.get('description')?.touched" 
+                         class="text-danger small">Required</div>
+                  </td>
+                  <td>
+                    <input type="number" class="form-control form-control-sm" 
+                           formControlName="quantity" 
+                           min="1" 
+                           (input)="item.updateValueAndValidity()">
+                    <div *ngIf="item.get('quantity')?.invalid && item.get('quantity')?.touched" 
+                         class="text-danger small">Min: 1</div>
+                  </td>
+                  <td>
+                    <input type="number" step="0.01" class="form-control form-control-sm" 
+                           formControlName="unitPrice" 
+                           min="0.01" 
+                           placeholder="0.00"
+                           (input)="item.updateValueAndValidity()">
+                    <div *ngIf="item.get('unitPrice')?.invalid && item.get('unitPrice')?.touched" 
+                         class="text-danger small">Min: 0.01</div>
+                  </td>
+                  <td class="text-end">
+                    <strong>{{ formatCurrency(calculateItemAmount(item)) }}</strong>
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-danger" 
+                            (click)="removeItem(i)"
+                            [disabled]="items.length === 1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot class="table-light">
+                <tr>
+                  <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                  <td class="text-end"><strong>{{ formatCurrency(calculateTotalAmount()) }}</strong></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div *ngIf="items.length === 0" class="alert alert-warning">
+            At least one invoice item is required
+          </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary" [disabled]="invoiceForm.invalid || items.length === 0">
+            {{ isEditMode ? 'Update' : 'Create' }} Invoice
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
