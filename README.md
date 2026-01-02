@@ -626,14 +626,6 @@ Developed as a comprehensive full-stack enterprise project demonstrating:
 
 ---
 
-## 📝 Documentation Files
-
-- **[README.md](README.md)** - This file (Project overview and setup)
-- **[CHATBOT_DOCUMENTATION.md](CHATBOT_DOCUMENTATION.md)** - AI Chatbot detailed documentation
-- **[GENAI_SETUP.md](GENAI_SETUP.md)** - GenAI integration setup guide
-- **[GENAI_INTEGRATION_SUMMARY.md](GENAI_INTEGRATION_SUMMARY.md)** - GenAI integration summary
-- **[DATA_FLOW_EXPLANATION.md](DATA_FLOW_EXPLANATION.md)** - Data flow architecture
-- **[QUICK_START.md](QUICK_START.md)** - Quick start guide
 
 ---
 
