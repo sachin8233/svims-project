@@ -137,10 +137,21 @@ PracticeProject/
      ```sql
      CREATE DATABASE svims_db;
      ```
-   - Update `src/main/resources/application.properties`:
+   - Set environment variables (recommended):
+     ```bash
+     # Windows PowerShell
+     $env:DB_USERNAME="postgres"
+     $env:DB_PASSWORD="your_password"
+     
+     # Linux/Mac
+     export DB_USERNAME=postgres
+     export DB_PASSWORD=your_password
+     ```
+   - Or create `src/main/resources/application-local.properties` (this file is gitignored):
      ```properties
      spring.datasource.username=postgres
      spring.datasource.password=your_password
+     jwt.secret=your-jwt-secret-key-must-be-at-least-64-characters-long
      ```
 
 3. **Run Database Scripts** (Optional - Hibernate will create tables automatically)
@@ -149,32 +160,35 @@ PracticeProject/
    psql -U postgres -d svims_db -f src/main/resources/db/seed-data.sql
    ```
 
-4. **Configure AI Chatbot (Optional)**
-   - For OpenAI: Get API key from https://platform.openai.com/api-keys
-   - For Groq (Free): Get API key from https://console.groq.com
-   - Update `src/main/resources/application.properties`:
-     ```properties
-     # Option 1: OpenAI
-     openai.enabled=true
-     openai.api.key=${OPENAI_API_KEY:}
-     openai.model=gpt-3.5-turbo
-     
-     # Option 2: Groq (Free tier)
-     chatbot.enabled=true
-     chatbot.provider=groq
-     groq.api.key=${GROQ_API_KEY:}
-     groq.model=llama-3.1-8b-instant
-     
-     # Option 3: Simple rule-based (No API key needed)
-     chatbot.enabled=true
-     chatbot.provider=simple
-     ```
-   - Or set environment variables:
+4. **Configure Secrets**
+   - **Required**: Set JWT secret (at least 64 characters):
      ```bash
-     export OPENAI_API_KEY=sk-your-key-here
-     # OR
+     # Windows PowerShell
+     $env:JWT_SECRET="your-jwt-secret-key-must-be-at-least-64-characters-long-for-hs512-algorithm"
+     
+     # Linux/Mac
+     export JWT_SECRET="your-jwt-secret-key-must-be-at-least-64-characters-long-for-hs512-algorithm"
+     ```
+   - **Optional - AI Chatbot**: 
+     - For Groq (Free): Get API key from https://console.groq.com
+     ```bash
+     # Windows PowerShell
+     $env:GROQ_API_KEY="gsk-your-key-here"
+     
+     # Linux/Mac
      export GROQ_API_KEY=gsk-your-key-here
      ```
+   - **Optional - Email**: Set email credentials for reminders:
+     ```bash
+     # Windows PowerShell
+     $env:MAIL_USERNAME="your-email@gmail.com"
+     $env:MAIL_PASSWORD="your-app-password"
+     
+     # Linux/Mac
+     export MAIL_USERNAME=your-email@gmail.com
+     export MAIL_PASSWORD=your-app-password
+     ```
+   - **Alternative**: Create `src/main/resources/application-local.properties` (gitignored) with all secrets
 
 5. **Build and Run**
    ```bash

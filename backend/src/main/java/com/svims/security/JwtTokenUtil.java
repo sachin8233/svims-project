@@ -19,13 +19,19 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:}")
     private String secret;
 
     @Value("${jwt.expiration}")
     private Long expiration;
 
     private SecretKey getSigningKey() {
+        if (secret == null || secret.isEmpty()) {
+            throw new IllegalStateException("JWT secret is not configured. Please set JWT_SECRET environment variable or configure jwt.secret in application.properties");
+        }
+        if (secret.length() < 64) {
+            throw new IllegalStateException("JWT secret must be at least 64 characters long for HS512 algorithm. Current length: " + secret.length());
+        }
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

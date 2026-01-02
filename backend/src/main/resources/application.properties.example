@@ -1,0 +1,52 @@
+# Server Configuration
+server.port=8080
+spring.application.name=svims-backend
+
+# Database Configuration
+# Set DB_USERNAME and DB_PASSWORD environment variables, or uncomment and set below
+spring.datasource.url=jdbc:postgresql://localhost:5432/svims_db
+spring.datasource.username=postgres
+spring.datasource.password=your-database-password
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.use_sql_comments=true
+spring.jpa.properties.hibernate.default_schema=public
+
+# JWT Configuration
+# Secret key must be at least 64 characters (512 bits) for HS512 algorithm
+# Set JWT_SECRET environment variable or uncomment and set below
+# Generate a secure random key: openssl rand -base64 64
+jwt.secret=your-jwt-secret-key-must-be-at-least-64-characters-long-for-hs512-algorithm-security-requirements
+jwt.expiration=86400000
+
+# Email Configuration (for reminders)
+# Set MAIL_USERNAME and MAIL_PASSWORD environment variables, or uncomment and set below
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# CORS Configuration
+cors.allowed-origins=http://localhost:4200
+
+# FREE Chatbot Configuration
+# Option 1: Groq (FREE tier - Get API key from https://console.groq.com)
+# Option 2: Simple rule-based (No API key needed - works immediately)
+chatbot.enabled=true
+chatbot.provider=simple
+# Set GROQ_API_KEY environment variable or uncomment and set below
+groq.api.key=your-groq-api-key-here
+groq.model=llama-3.1-8b-instant
+
+# Logging
+logging.level.com.svims=DEBUG
+logging.level.org.springframework.security=DEBUG
+
+
