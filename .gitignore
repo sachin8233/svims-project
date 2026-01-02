@@ -3,6 +3,8 @@
 backend/.classpath
 backend/.project
 backend/.settings/
+.idea/
+backend/.idea/
 
 # Frontend
 /frontend/node_modules/
